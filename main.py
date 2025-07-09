@@ -48,52 +48,11 @@ class worker(QtCore.QThread):
     def __init__(self):
         super().__init__()
 
-    def setVariable(self, startMode: int, expectNum: int, moneyNum: int, stoneNum: int, autoRestartDispatch: bool):
+    def setVariable(self, startMode: int, expectNum: int, moneyNum: int, stoneNum: int):
         self.startMode = startMode
         self.expectNum = expectNum
         self.moneyNum = moneyNum
         self.stoneNum = stoneNum
-        self.autoRestartDispatch = autoRestartDispatch
-
-    def processDispatchMissionComplete(self, device, restartDispatchButton):
-        if not self.autoRestartDispatch:
-            return
-        
-        screenshot = asarray(device.screenshot())
-        condifence = 0.75
-        restartDispatchButtonLocation = aircv.find_template(screenshot, restartDispatchButton, condifence)
-        
-        if restartDispatchButtonLocation:
-            print("dispatch mission completed!")
-            self.emitLog.emit("重新進行派遣任務")
-            
-            while True:
-                restartDispatchFoundResult: tuple = restartDispatchButtonLocation["result"]
-                doubleClick(
-                    device,
-                    restartDispatchFoundResult[0],
-                    restartDispatchFoundResult[1],
-                )
-                
-                QtCore.QThread.sleep(1)
-
-                doubleClick(
-                    device,
-                    restartDispatchFoundResult[0],
-                    restartDispatchFoundResult[1],
-                )
-                
-                QtCore.QThread.sleep(1)
-
-                after_restartDispatch_screenshot = asarray(device.screenshot())
-                restartDispatchButtonLocationAfter = aircv.find_template(
-                    after_restartDispatch_screenshot, restartDispatchButton, condifence
-                )
-                
-                if not restartDispatchButtonLocationAfter:
-                    break
-                
-            QtCore.QThread.sleep(1)
 
     def run(self):
         self.isStart.emit()
@@ -148,7 +107,6 @@ class worker(QtCore.QThread):
             buyButton = aircv.imread(f"./img/buyButton-{e7_language}.png")
             refreshButton = aircv.imread(f"./img/refreshButton-{e7_language}.png")
             refreshYesButton = aircv.imread(f"./img/refreshYesButton-{e7_language}.png")
-            restartDispatchButton = aircv.imread(f"./img/restartDispatchButton-{e7_language}.png")
             
             needRefresh = False
             covenantFound = False
@@ -173,8 +131,6 @@ class worker(QtCore.QThread):
                         )
 
                         QtCore.QThread.sleep(1)
-                        
-                        self.processDispatchMissionComplete(device, restartDispatchButton)
 
                         buy_screenshot = asarray(device.screenshot())
                         buyButtonLocation = aircv.find_template(
@@ -192,8 +148,6 @@ class worker(QtCore.QThread):
                                 )
 
                                 QtCore.QThread.sleep(1)
-                                
-                                self.processDispatchMissionComplete(device, restartDispatchButton)
 
                                 after_buy_screenshot = asarray(device.screenshot())
                                 buyButtonLocationAfter = aircv.find_template(
@@ -236,8 +190,6 @@ class worker(QtCore.QThread):
                         )
 
                         QtCore.QThread.sleep(1)
-                        
-                        self.processDispatchMissionComplete(device, restartDispatchButton)
 
                         buy_screenshot = asarray(device.screenshot())
                         buyButtonLocation = aircv.find_template(
@@ -255,8 +207,6 @@ class worker(QtCore.QThread):
                                 )
 
                                 QtCore.QThread.sleep(1)
-                                
-                                self.processDispatchMissionComplete(device, restartDispatchButton)
 
                                 after_buy_screenshot = asarray(device.screenshot())
                                 buyButtonLocationAfter = aircv.find_template(
@@ -299,8 +249,6 @@ class worker(QtCore.QThread):
 
                         QtCore.QThread.sleep(1)
 
-                        self.processDispatchMissionComplete(device, restartDispatchButton)
-
                         confirm_screenshot = asarray(device.screenshot())
                         refreshYesButtonLocation = aircv.find_template(
                             confirm_screenshot, refreshYesButton, 0.9
@@ -319,8 +267,6 @@ class worker(QtCore.QThread):
                                 )
 
                                 QtCore.QThread.sleep(1)
-
-                                self.processDispatchMissionComplete(device, restartDispatchButton)
 
                                 after_click_yes_screenshot = asarray(
                                     device.screenshot()
@@ -358,7 +304,6 @@ class worker(QtCore.QThread):
                     needRefresh = True
 
                     QtCore.QThread.sleep(1)
-                    self.processDispatchMissionComplete(device, restartDispatchButton)
 
             # finished report
             self.emitLog.emit("===== 結算 =====")
@@ -521,10 +466,6 @@ class Ui_Main(object):
             | QtCore.Qt.AlignmentFlag.AlignVCenter
         )
         self.stoneInput.setObjectName("stoneInput")
-        self.autoRestartDispatchCheckbox = QtWidgets.QCheckBox(self.functionTab)
-        self.autoRestartDispatchCheckbox.setGeometry(QtCore.QRect(40, 90, 150, 21))
-        self.autoRestartDispatchCheckbox.setObjectName("autoRestartDispatchCheckbox")
-        self.autoRestartDispatchCheckbox.setChecked(False)
         self.covenantRadioButton = QtWidgets.QRadioButton(self.functionTab)
         self.covenantRadioButton.setGeometry(QtCore.QRect(40, 130, 91, 21))
         self.covenantRadioButton.setChecked(True)
@@ -607,7 +548,6 @@ class Ui_Main(object):
         )
         self.stoneTimeLabel.setText(_translate("Main", "個"))
         self.stoneInput.setText(_translate("Main", "0"))
-        self.autoRestartDispatchCheckbox.setText(_translate("Main", "自動重新派遣"))
         self.covenantRadioButton.setText(_translate("Main", "聖約書籤"))
         self.mysticRadioButton.setText(_translate("Main", "神秘書籤"))
         self.stoneRadioButton.setText(_translate("Main", "天空石"))
@@ -635,7 +575,7 @@ class Ui_Main(object):
         self.githubTextUrl.setText(
             _translate(
                 "Main",
-                '<a href="https://www.github.com/steven010116/epic7autoBookmark">https://www.github.com/steven010116/epic7autoBookmark</a>',
+                '<a href="https://github.com/mark88915/epic7autoBookmark_revise">https://github.com/mark88915/epic7autoBookmark_revise</a>',
             )
         )
         self.tabWidget.setTabText(
@@ -658,7 +598,6 @@ class Ui_Main(object):
                 if self.stoneTotalShowEdit.text().isdigit()
                 else 0
             )
-            autoRestartDispatch = self.autoRestartDispatchCheckbox.isChecked()
 
             if moneyNum == 0 or stoneNum == 0:
                 self.logTextBrowser.setText("")
@@ -695,7 +634,6 @@ class Ui_Main(object):
                 self.startProperty(False)
                 return
 
-            self.worker.setVariable(startMode, expectNum, moneyNum, stoneNum, autoRestartDispatch)
             self.worker.start()
         else:
             self.worker.terminate()
@@ -716,7 +654,6 @@ class Ui_Main(object):
         self.covenantInput.setDisabled(isDisabled)
         self.mysticInput.setDisabled(isDisabled)
         self.stoneInput.setDisabled(isDisabled)
-        self.autoRestartDispatchCheckbox.setDisabled(isDisabled)
 
     def startWorker(self):
         self.logTextBrowser.setText("")
