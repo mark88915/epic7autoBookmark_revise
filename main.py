@@ -13,29 +13,31 @@ import aircv
 import json
 import random
 
+# 讀設定檔並轉成json格式，然後從中取值並賦值
 file = open("config.json", "r", encoding="utf-8")
 config = json.load(file)
 adb_addr = config["adb_addr"]
 e7_language = config["e7_language"]
 
-
+# 確認坐標軸位置 (好像未使用，先假定為開發階段的工具函數)
 def pointOffset(point):
     x = int(random.uniform(point.x - 2, point.x + 2))
     y = int(random.uniform(point.y - 2, point.y + 2))
     return (x, y)
 
-
+# 裝置上雙擊坐標軸位置事件
 def doubleClick(device: AdbDevice, x: int, y: int):
     device.click(x, y)
     device.click(x, y)
 
-
+# QtCore.QThread類
 class worker(QtCore.QThread):
     startMode = 0
     expectNum = 0
     moneyNum = 0
     stoneNum = 0
 
+    # QtCore Signal變數設定
     isStart = QtCore.pyqtSignal()
     isProgress = QtCore.pyqtSignal(str)
     isFinish = QtCore.pyqtSignal()
@@ -48,12 +50,15 @@ class worker(QtCore.QThread):
     def __init__(self):
         super().__init__()
 
+    # 不明用途，看起來像是建構子但QtPy也沒有相關文件，也沒有任何參考
+    # 推測是UI_Main內work實例的isStart、isFinish、isError時透過startWorker、stopWorker、ErrorWorker所塞入的值
     def setVariable(self, startMode: int, expectNum: int, moneyNum: int, stoneNum: int):
         self.startMode = startMode
         self.expectNum = expectNum
         self.moneyNum = moneyNum
         self.stoneNum = stoneNum
 
+    # QtCore.QThread程式進入點
     def run(self):
         self.isStart.emit()
 
@@ -112,6 +117,7 @@ class worker(QtCore.QThread):
             covenantFound = False
             mysticFound = False
 
+            # MAIN Logic
             while self.expectNum > 0 and self.moneyNum > 280000 and self.stoneNum >= 3:
                 screenshot = asarray(device.screenshot())
 
@@ -325,6 +331,7 @@ class worker(QtCore.QThread):
 class Ui_Main(object):
     start = False
 
+    # 小工具UI初始化
     def setupUi(self, Main):
         Main.setObjectName("Main")
         Main.resize(310, 460)
@@ -524,6 +531,7 @@ class Ui_Main(object):
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Main)
 
+    # 小工具UI初始值設定
     def retranslateUi(self, Main):
         _translate = QtCore.QCoreApplication.translate
         Main.setWindowTitle(_translate("Main", "第七史詩刷商店小工具"))
@@ -575,17 +583,19 @@ class Ui_Main(object):
         self.githubTextUrl.setText(
             _translate(
                 "Main",
-                '<a href="https://github.com/mark88915/epic7autoBookmark_revise">https://github.com/mark88915/epic7autoBookmark_revise</a>',
+                '<a href="https://github.com/mark88915/epic7autoBookmark_revise">https://github.com/mark88915/epic7autoBookmark_revise</a>', # 調整為fork後連結
             )
         )
         self.tabWidget.setTabText(
             self.tabWidget.indexOf(self.introductionTab), _translate("Main", "簡介")
         )
 
+    # 開始按鈕click事件
     def startPressEvent(self):
         self.start = not self.start
 
         if self.start:
+            # 開始時設定必要變數數值
             startMode = 0
             expectNum = 0
             moneyNum = (
@@ -599,6 +609,7 @@ class Ui_Main(object):
                 else 0
             )
 
+            # 若金幣或石頭數量為0就停止執行
             if moneyNum == 0 or stoneNum == 0:
                 self.logTextBrowser.setText("")
                 self.logTextBrowser.append("石頭或金幣輸入錯誤")
@@ -607,24 +618,28 @@ class Ui_Main(object):
                 self.startProperty(False)
                 return
 
+            # 設定勾選聖約書籤選項所需的屬性數值
             if self.covenantRadioButton.isChecked():
                 startMode = 1
                 covenant = self.covenantInput.text()
                 expectNum = int(covenant) if covenant.isdigit() else 0
                 self.covenantInput.setText(str(expectNum))
 
+            # 設定勾選神秘書籤選項所需的屬性數值
             elif self.mysticRadioButton.isChecked():
                 startMode = 2
                 mystic = self.mysticInput.text()
                 expectNum = int(mystic) if mystic.isdigit() else 0
                 self.mysticInput.setText(str(expectNum))
 
+            # 設定勾選天空石選項所需的屬性值
             elif self.stoneRadioButton.isChecked():
                 startMode = 3
                 stone = self.stoneInput.text()
                 expectNum = int(stone) if stone.isdigit() else 0
                 self.stoneInput.setText(str(expectNum))
 
+            # Handle Exception Case
             else:
                 self.logTextBrowser.append("沒有選取的radioButton,")
                 self.logTextBrowser.append("明明就預設會選一個,")
@@ -640,6 +655,7 @@ class Ui_Main(object):
             self.logTextBrowser.append("===== 停止 =====")
             self.startProperty(False)
 
+    # 如果按下開始，將按鈕文字設成停止並禁用所有表單項
     def startProperty(self, isDisabled: bool):
         if isDisabled:
             self.startButton.setText("停止")
@@ -655,14 +671,17 @@ class Ui_Main(object):
         self.mysticInput.setDisabled(isDisabled)
         self.stoneInput.setDisabled(isDisabled)
 
+    # worker執行開始：將logger清空並執行startProperty(isDisabled: true)
     def startWorker(self):
         self.logTextBrowser.setText("")
         self.startProperty(True)
 
+    # worker發生錯誤：將start設成false並執行startProperty(isDisabled: false)
     def errorWorker(self):
         self.start = False
         self.startProperty(False)
 
+    # worker停止執行：同發生錯誤
     def stopWorker(self):
         self.start = False
         self.startProperty(False)
