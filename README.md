@@ -48,9 +48,24 @@ adb 功能在設定=>進階=>Android 調試橋(ADB)，勾選後會看到路徑�
 
 ![預覽](https://i.imgur.com/KxeSpWM.png)
 
-3. 打開小工具(main.exe)，選擇條件並輸入目標次數，按下開始應該就會自己動惹。
-4. 之前的版本用圖像辨識，而這個版本走的是 android adb，已經不會搶滑鼠了，甚至可以縮小放著。
-5. .exe 是用 pyinstaller 包的，有安全疑慮的話可以自己打包 `pyinstaller -F -w -i main.ico main.py`。
+3. 安裝 python 並在安裝時將 python 加進 PATH(環境變數)
+4. 打開 cmd(命令提示列)並移動到資料夾底下然後依序執行以下指令
+
+```
+python -m venv venv (若環境變數為python3則用python3替代python)
+venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+```
+
+---
+
+若要打包為執行檔(.exe)
+
+```
+pip install pyinstaller
+pyinstaller -F -w -i main.ico main.py
+```
 
 ### MacOS (不打包，以開發模式進行)
 
