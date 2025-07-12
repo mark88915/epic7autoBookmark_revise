@@ -50,8 +50,7 @@ class worker(QtCore.QThread):
     def __init__(self):
         super().__init__()
 
-    # 不明用途，看起來像是建構子但QtPy也沒有相關文件，也沒有任何參考
-    # 推測是UI_Main內work實例的isStart、isFinish、isError時透過startWorker、stopWorker、ErrorWorker所塞入的值
+    # 開始執行前塞值，類似建構子
     def setVariable(self, startMode: int, expectNum: int, moneyNum: int, stoneNum: int):
         self.startMode = startMode
         self.expectNum = expectNum
@@ -649,6 +648,7 @@ class Ui_Main(object):
                 self.startProperty(False)
                 return
 
+            self.worker.setVariable(startMode, expectNum, moneyNum, stoneNum)
             self.worker.start()
         else:
             self.worker.terminate()
