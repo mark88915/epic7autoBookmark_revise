@@ -1,0 +1,54 @@
+name: Package Epic7AutoBookmark with PyInstaller
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_os:
+        description: "Select the target OS for packaging"
+        required: true
+        default: "windows"
+        type: choice
+        options:
+          - windows
+          - macos
+
+jobs:
+  build:
+    runs-on: ${{ inputs.target_os == 'windows' && 'windows-latest' || 'macos-latest' }}
+    steps:
+      # 1. 檢出代碼
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. 設置 Python 環境
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9" # 專案指定 3.9.6 ~ 3.9.10
+
+      # 3. 安裝依賴項
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller pillow  # Pillow 用於圖標轉換
+
+      # 4. 使用 PyInstaller 打包
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller -F -w -i main.ico --add-data "img;img" --name Epic7AutoBookmark main.py
+
+      # 5. 為 macOS 壓縮 .app（因為 .app 是資料夾）
+      - name: Zip macOS app
+        if: inputs.target_os == 'macos'
+        run: |
+          cd dist
+          zip -r Epic7AutoBookmark.app.zip Epic7AutoBookmark.app
+
+      # 6. 上傳構建成品
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Epic7AutoBookmark-${{ inputs.target_os }}
+          path: |
+            ${{ inputs.target_os == 'windows' && 'dist/Epic7AutoBookmark.exe' || 'dist/Epic7AutoBookmark.app.zip' }}
