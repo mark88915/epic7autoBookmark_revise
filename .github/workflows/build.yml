@@ -36,7 +36,11 @@ jobs:
       # 4. 使用 PyInstaller 打包
       - name: Build with PyInstaller
         run: |
-          pyinstaller -F -w -i main.ico --add-data "img;img" --name Epic7AutoBookmark main.py
+          if [ "${{ inputs.target_os }}" == "windows" ]; then
+            pyinstaller -F -w -i main.ico --add-data "img:img" --hidden-import PyQt6 --name Epic7AutoBookmark main.py
+          else
+            pyinstaller -F -w -i main.icns --add-data "img:img" --hidden-import PyQt6 --name Epic7AutoBookmark main.py
+          fi
 
       # 5. 為 macOS 壓縮 .app（因為 .app 是資料夾）
       - name: Zip macOS app
