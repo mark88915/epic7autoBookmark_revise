@@ -42,14 +42,20 @@ jobs:
             pyinstaller -F -w -i main.icns --add-data "img:img" --hidden-import PyQt6 --name Epic7AutoBookmark main.py
           fi
 
-      # 5. 為 macOS 壓縮 .app（因為 .app 是資料夾）
+      # 5. 為 macOS 簽署 .app
+      - name: Sign macOS app
+        if: inputs.target_os == 'macos'
+        run: |
+          codesign -f -s - dist/Epic7AutoBookmark.app
+
+      # 6. 為 macOS 壓縮 .app（因為 .app 是資料夾）
       - name: Zip macOS app
         if: inputs.target_os == 'macos'
         run: |
           cd dist
           zip -r Epic7AutoBookmark.app.zip Epic7AutoBookmark.app
 
-      # 6. 上傳構建成品
+      # 7. 上傳構建成品
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
