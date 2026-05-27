@@ -22,7 +22,7 @@ jobs:
 
       # 2. 設置 Python 環境
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.9" # 專案指定 3.9.6 ~ 3.9.10
 
@@ -33,14 +33,15 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller pillow  # Pillow 用於圖標轉換
 
-      # 4. 使用 PyInstaller 打包
-      - name: Build with PyInstaller
-        run: |
-          if [ "${{ inputs.target_os }}" == "windows" ]; then
-            pyinstaller -F -w -i main.ico --add-data "img:img" --hidden-import PyQt6 --name Epic7AutoBookmark main.py
-          else
-            pyinstaller -F -w -i main.icns --add-data "img:img" --hidden-import PyQt6 --name Epic7AutoBookmark main.py
-          fi
+      # 4. 使用 PyInstaller 打包 (Windows)
+      - name: Build with PyInstaller (Windows)
+        if: inputs.target_os == 'windows'
+        run: pyinstaller -F -w -i main.ico --add-data "img;img" --hidden-import PyQt6 --name Epic7AutoBookmark main.py
+
+      # 4. 使用 PyInstaller 打包 (macOS)
+      - name: Build with PyInstaller (macOS)
+        if: inputs.target_os == 'macos'
+        run: pyinstaller -F -w -i main.icns --add-data "img:img" --hidden-import PyQt6 --name Epic7AutoBookmark main.py
 
       # 5. 為 macOS 簽署 .app
       - name: Sign macOS app
