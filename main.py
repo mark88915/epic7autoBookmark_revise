@@ -257,6 +257,7 @@ class worker(QtCore.QThread):
                         self.startMode, self.expectNum, self.emitStone, self.emitLog
                     )
                     if success:
+                        refreshTime += 1
                         # 刷新完成後先判斷一次刷新按鈕，若因為網路波動導致loading就延長一秒，避免在loading中還在跑後續動作導致可能有書籤漏買
                         while True:
                             refresh_screenshot = asarray(device.screenshot())
